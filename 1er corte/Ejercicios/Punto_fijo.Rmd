@@ -1,0 +1,287 @@
+---
+title: "Método Punto Fijo"
+author: "Juan Angarita, Héctor Rodríguez, Aldemar Ramirez"
+date: "3/8/2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## Problema
+
+Determinar la raiz de una función de la forma f(x).
+
+## Solución 
+
+**Lenguaje de programación:** R
+
+## Función principal- Método de Punto Fijo
+
+Parametros:
+
+-f <- función
+
+-x_1<- valor desde el que se busca en la raiz
+
+-maxIteraciones <- cantidad máxima de iteraciones que puede realizar la función
+
+-tol <- tolerancia mínima que debe tener la función
+
+Valores de retorno:
+
+  "x_n" = resultados$x,
+  
+  "errorAbsoluto" = resultados$errorAbsoluto, <- valor del error absoluto a través de las iteraciones
+  
+  "errorRelactivo" = resultados$errorRelativo <- valor del error relativo a través de las iteraciones
+
+```{r}
+#1e-9 = 0.000000001
+puntofijo =function(g, x0, tol=1e-9, maxIteraciones=100){
+  k = 1
+  errorAbsoluto = c()
+  errorRelativo = c()
+  x = c()
+    # iteración hasta que abs(x1 - x0) <= tol o se alcance maxIteraciones
+    repeat{
+    x1 = g(x0)
+    dx = abs(x1 - x0)
+    x0 = x1
+    #Imprimir estado
+    #cat("x_", k, "= ", x1, "\n")
+    k = k+1
+    x <- c(x,x1)
+    errorAbsoluto <- c(errorAbsoluto,dx)
+    errorRelativo <- c(errorRelativo,dx/(abs(x0)))
+    #until
+    if(dx< tol|| k > maxIteraciones) break;
+  }
+  # Mensaje de salida
+  if( dx > tol ){
+    cat("No hubo convergencia ")
+    #return(NULL)
+  } else{
+    
+    my_list <- list("resultado" = x1, 
+                    "errorAbsoluto" = errorAbsoluto, 
+                    "errorRelativo" = errorRelativo, 
+                    "x" = x)
+    
+    return(my_list)
+  }
+}
+```
+El método trata de encontrar un $x$ $tal$ $que$ $x=g(x)$.
+
+Un número $x=x*$ que satisfaga la ecuación se denomina como el punto fijo.
+La función verifica que la resta entre x1 y x0 sea menor o igual al nivel de tolerancia previamente establecido. Además cabe aclarar que se verifica que en los alrededores de $x=x*$ la derivada sea menor que 1. En dado caso en la derivada sea mayor a 1, o que la resta sea mayor al nivel de tolerancia, o que se alcance el límite de iteraciones se indica que no hay convergencia.
+
+## Implementacion
+
+La iteración del punto fijo se hace de la siguiente manera: 
+
+Dado $x_i+_1 = g(x_i), i=0,2,..$..
+
+Se ve representado en las siguientes gráficas : 
+
+**Gráfica de la función**
+```{r}
+f = function(x) (exp(1)^x)-(pi*x)
+curve(f, -5, 5) #gráfico para decidir un intervalo
+abline(h = 0, v = 0, col = "gray") 
+
+```
+Gráfica de la función $e^x - pi*X$
+```{r}
+g = function(x)  (exp(1)^x)/(pi)
+y = function(x) x
+curve(g, -5, 5)
+curve(y, -5, 5, add=T) #gráfico para decidir un intervalo
+abline(h = 0, v = 0, col = "gray")
+```
+Gráfica correspondiente a la función cuando se despeja x
+```{r}
+g = function(x) (exp(1)^x)/(pi)
+y = function(x) x
+curve(g, 0, 2)
+curve(y, 0, 2, add=T)
+abline(v = 0.5, col = "gray")
+abline(v = 1.5, col = "gray")
+```
+Gráfica correspondiente al acercamiento a g sobre el punto fijo
+```{r}
+dg <- function(x) {}
+body(dg) <- D(body(g), 'x')
+curve(dg, -5, 4, ylab = "g(x)")
+
+```
+Gráfica correspondiente a la primera derivada de g(x)
+
+**Tabla de resultados a través de las iteraciones**
+
+```{r}
+resultados<-puntofijo(g, 1, 1e-9)
+tablaErrores <- data.frame(
+  "iteraciones" = 1:length(resultados$errorAbsoluto),
+  "x_n" = resultados$x,
+  "errorAbsoluto" = resultados$errorAbsoluto,
+  "errorRelactivo" = resultados$errorRelativo
+)
+print(tablaErrores)
+
+```
+
+```{r}
+cat("Resultado: iteraciones",length(resultados$errorAbsoluto),"\n")
+cat("x = ",resultados$x[length(resultados$errorAbsoluto)],"\n")
+cat("Error estimado <= ", resultados$errorRelativo[length(resultados$errorAbsoluto)],"\n")
+```
+**Gráfica de iteraciones vs error absoluto**
+```{r}
+plot(x = 1:length(resultados$x), y = resultados$errorAbsoluto, xlab = "Iteraciones",
+     ylab = "Error est.", type="b", main = "Iteraciones vs Error absoluto")
+
+```
+La gráfica denota claramente como a medida que incrementan las iteraciones el error va disminuyendo y tiende a cero.
+
+**Grafica de x(i) vs x(i+1)**
+```{r}
+m_i =  resultados$x[-length(resultados$x)]
+m_i2 = resultados$x
+m_i2 = m_i2[-1]
+plot(x =m_i, y =m_i2, xlab = "m_i", ylab = "m_(i+1)", type="b",main = "Convergencia")
+
+```
+La grafica nos confirma como el método de punto fijo tiene una convergencia que presenta una tendencia lineal.
+
+**Gráfica de Error Relativo(i) vs Error Relativo(i+1)**
+```{r}
+m_i = resultados$errorRelativo[-length(resultados$errorRelativo)]
+m_i2 = resultados$errorRelativo
+m_i2 = m_i2[-1]
+
+
+plot(x =m_i, y = m_i2, xlab = "Error Relativo(i)",
+     ylab = "Error Relativo (i+1)",
+     main = "Convergencia", type = "b")
+```
+
+
+**Grafica de iteraciones vs x0 (Aproximación por derecha)**
+
+```{r}
+l=1
+v = c() 
+iteraciones = c()
+while(l>=0.550) {
+  v <- c(v,l)
+  resultados<-puntofijo(g, l, 1e-9)
+  
+  tablaErrores <- data.frame(
+    "iteraciones" = 1:length(resultados$errorAbsoluto),
+    "x_n" = resultados$x,
+    "errorAbsoluto" = resultados$errorAbsoluto,
+    "errorRelactivo" = resultados$errorRelativo
+  )
+  iteraciones <- c(iteraciones,length(resultados$errorAbsoluto))
+  l = l-0.050
+  #print(tablaErrores)
+}
+
+plot(x =v, y =iteraciones, xlab = "x0", ylab = "Iteraciones", type="b",main = "Iteraciones vs x0")
+```
+
+Entre más alejado esté el valor incial del valro real de la raíz, más iteraciones va a tomar el algoritmo.
+
+**Grafica de iteraciones vs x0 (Aproximación por izquierda)**
+```{r}
+l=0.1
+v = c() 
+iteraciones = c()
+while(l<=0.550) {
+  v <- c(v,l)
+  resultados<-puntofijo(g, l, 1e-9)
+  
+  tablaErrores <- data.frame(
+    "iteraciones" = 1:length(resultados$errorAbsoluto),
+    "x_n" = resultados$x,
+    "errorAbsoluto" = resultados$errorAbsoluto,
+    "errorRelactivo" = resultados$errorRelativo
+  )
+  iteraciones <- c(iteraciones,length(resultados$errorAbsoluto))
+  l = l+0.050
+  #print(tablaErrores)
+}
+
+plot(x =v, y =iteraciones, xlab = "x0", ylab = "Iteraciones", type="b",main = "Iteraciones vs x0")
+```
+Cuando comparamos la gráfica de aproximación por la izquirda con la de aproximación por derecha encontramos que ambas son prácticamente igual de eficientes, teniendo la aproximación por izquierda una ligera ventaja.
+
+**Grafica de iteraciones vs x0 (Aproximacion de x_0 a la raiz) **
+
+```{r}
+l=0.45
+v = c() 
+iteraciones = c()
+while(l<=0.550) {
+  v <- c(v,l)
+  resultados<-puntofijo(g, l, 1e-9)
+  
+  tablaErrores <- data.frame(
+    "iteraciones" = 1:length(resultados$errorAbsoluto),
+    "x_n" = resultados$x,
+    "errorAbsoluto" = resultados$errorAbsoluto,
+    "errorRelactivo" = resultados$errorRelativo
+  )
+  iteraciones <- c(iteraciones,length(resultados$errorAbsoluto))
+  l = l+0.005
+  #print(tablaErrores)
+}
+plot(x =v, y =iteraciones, xlab = "x_0", ylab = "Iteraciones", 
+     type="b",main = "Iteraciones vs x_0")
+```
+Al realizar una aproximación de $x_0$ con un valor cercano a la raiz encontramos que el número de iteraciones no cambia con variaciones bajas de $x_0$(es este caso variamos $x_0$ de a 0.004).
+
+## Caso especial: No hay convergencia
+
+**Gráfica de la función**
+```{r}
+f = function(x) (x^2)-1-x
+curve(f, -5, 5) #gráfico para decidir un intervalo
+abline(h = 0, v = 0, col = "gray") 
+
+```
+Gráfica de la función $ (x^2)-1$
+```{r}
+g = function(x) (x^2)-1
+y = function(x) x
+curve(g, -5, 5)
+curve(y, -5, 5, add=T) #gráfico para decidir un intervalo
+abline(h = 0, v = 0, col = "gray")
+```
+Gráfica correspondiente a la función cuando se despeja x
+```{r}
+g = function(x) (x^2)-1
+y = function(x) x
+curve(g, 0, 2)
+curve(y, 0, 2, add=T)
+abline(v = 0.5, col = "gray")
+abline(v = 1.5, col = "gray")
+```
+Gráfica correspondiente al acercamiento a g sobre el punto fijo
+```{r}
+dg <- function(x) {}
+body(dg) <- D(body(g), 'x')
+curve(dg, -5, 4, ylab = "g(x)")
+
+```
+Gráfica correspondiente a la primera derivada de g(x)
+
+**Tabla de resultados a traves de las iteraciones **
+
+```{r}
+resultados<-puntofijo(g, 1.5, 1e-9)
+```
+Vemos entonces como se alcanzó el número máximo de iteraciones sin encontrar convergencia alguna.
+
+
