@@ -1,0 +1,98 @@
+---
+title: "Método de Horner"
+author: "Juan Angarita, Hector Hernandez, Aldemar Ramirez"
+date: "July 28,2019"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+  word_document: default
+---
+
+## Problema
+
+Evaluar el valor de un polinomio es una tarea que involucra para la
+maquina realizar un número de operaciones la cual debe ser mínimas. Como se puede
+evaluar el siguiente polinomio con el número mínimo de multiplicaciones
+
+$p(x) = 2x^4-3x^2+3x-4$
+
+$x=-2$
+
+## Solución 
+
+**Lenguaje de programación: ** R
+
+Parametros:
+
+coeficientes <- los coeficientes del polinomio. Si falta algun termino el coeficiente es cero.
+
+x <- valor sobre es cual se evalua la función.
+
+```{r}
+metodoHorner = function(coeficientes,x){
+  y <- 0
+  multiplicaciones = 0
+  sumas = 0
+  for(coeficiente in coeficientes){
+    y <- y*x + coeficiente
+    multiplicaciones = multiplicaciones+1
+    sumas = sumas+1
+  }
+  return (list("y"=y,"multiplicaciones"=multiplicaciones,"sumas" = sumas))
+}
+```
+Función principal para evaluar el polinomio (método de Horner).
+
+valores que retorna:
+
+y <- resultado del prolinomio evaluado en x.
+
+multiplicaciones <- número de multiplicaciones que se realizaron.
+
+sumas <- número de sumas realizadas.
+
+## Implementación
+
+```{r}
+coeficientes <- c(2,0,-3,3,-4)
+
+resultado<-metodoHorner(coeficientes,-2)
+```
+
+## Resultados
+
+```{r}
+cat("Resultado: ", resultado$y,"\n")
+cat("Numero de multiplicaciones: ",resultado$multiplicaciones,"\n")
+cat("Numero de sumas: ",resultado$sumas,"\n")
+cat("Numero de total de operaciones: ",resultado$multiplicaciones + resultado$sumas,"\n")
+
+```
+
+## Error
+```{r}
+f = function(x) 2*x^4-3*x^2+3*x-4
+cat("Resultado evaluando funcion directamente: ", f(-2),"\n")
+cat("Error:" ,f(-2)-resultado$y,"\n")
+
+```
+
+**Evaluando en otros valores**
+```{r}
+resultado<-metodoHorner(coeficientes,-0.000001)
+cat("Resultado evaluando funcion directamente: ", f(-0.000001),"\n")
+cat("Error:" ,f(-0.000001)-resultado$y,"\n")
+```
+En ninguno de los casos ni evaluando con números enteros o racionales hay error al aplicar el método de Horner.
+
+**Eficacia**
+
+Sea g el grado del polinomio a resolver en un método de sustitucion "tipico" se harían $(g+g^2)/2$ multiplicaciones y $g$ sumas.
+
+$Total.operaciones = (g+g^2)/2 + g$
+
+En el método de Horner sólo se realizan $g$ sumas y $g$ multiplicaciones.
+
+$Total.operaciones = 2g$

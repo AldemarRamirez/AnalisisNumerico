@@ -1,0 +1,72 @@
+---
+title: "Error Propagacion"
+author: "Sebastian Angarita, Hector Rodriguez, Aldemar Ramirez"
+date: "3/8/2019"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+## Problema
+
+La velocidad de una particula es constante e igual a 4 m/s, medida con un error de 0.1 m/s durante un tiempo de recorrido de 5 seg. medido con error de 0.1 seg. Determine el error absoluto y el relativo en el valor de la distancia recorrida.
+
+
+## Solución 
+
+**Lenguaje de programación: ** R
+
+Parametros:
+
+v -> Velocidad en m/s
+
+Ev -> Error velocidad en m/s
+
+t -> Tiempo en seg
+
+Et -> Error Tiempo  en seg
+
+d -> Distancia Recorrida en metros
+
+
+```{r}
+
+Eabsoluto = function(v, t, Ev, Et){
+  a = v*Et + t*Ev
+  return(a)
+}
+  
+Erelativo = function(v, t, Ev, Et){
+  a = (Ev/v + Et/t)*100
+  return(a)
+}
+
+```
+
+La funcion Eabsoluto calcula el error absoluto de la distancia recorrida mientras que la funcion Erelativo calcula el error relativo porcentual de la relacion entre el error y la magnitud de la distancia.
+
+## Resultados
+
+**Error Absoluto**
+
+```{r}
+## En caso de cambiar los valores se puede hacer a continuacion 
+v = 4
+t = 5
+Ev = 0.1
+Et = 0.1
+
+b = Eabsoluto(v, t, Ev, Et)
+d = v*t
+cat("Error Absoluto: la distancia recorrida es",d,"+-",b,"metros")
+
+```
+
+**Error Relativo**
+
+```{r}
+c = Erelativo(v, t, Ev, Et)
+cat("El error relativo de la distancia recorrida es:",c,"%")
+```
+

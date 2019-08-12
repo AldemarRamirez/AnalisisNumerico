@@ -1,0 +1,73 @@
+---
+title: "Error Redondeo "
+author: "Juan angarita, Héctor Rodríguez, Aldemar Ramirez"
+date: "3/8/2019"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+## Problema
+Suponga que un dispositivo solo puede almacenar únicamente los cuatro primeros
+dígitos decimales de cada número real, y trunca los restantes (esto es redondeo inferior).
+Calcule el error de redondeo si se quiere almacenar el número 536.78.
+
+## Solución 
+
+**Lenguaje de programación: ** R
+
+**Parámetros: **
+
+n <- Cantidad de enteros del número normalizado con pontencias de 10
+
+m <- Cantidad de cifras decimales a almacenar en el dispositivo
+
+E <- Error de redondeo absoluto ->$1*10^{(n-m)}$
+
+e <- Error de redondeo relativo ->$10*10^{-m}$
+
+```{r}
+  funcion = function(parteEntera,maximaCap){
+  absoluto <- 1*10^(parteEntera-maximaCap)
+  relativo <- 10*10^(-maximaCap)
+  newList <- list("relativo" = relativo, "absoluto" = absoluto)
+  return(newList)
+}
+```
+Función para calcular los errores de redondeo absoluto y relativo.
+```{r}
+x <- 536.78
+m <- 4
+i <- 1
+c <- x
+```
+Asignación de variables dados los parametros del problema y asignación de variables auxiliares. 
+
+```{r}
+while (c>1) {
+  c <- c*10^(-i)
+  i <- i+1
+  }
+n <- i
+```
+Algoritmo encargado de determinar el orden de magnitud *n* necesario para representar el numero en forma normalizada
+
+```{r}
+numeroTruncado <- floor(x*10^(m-n))*10^(n-m)
+error <- x-numeroTruncado
+
+errores<-funcion(n,m)
+```
+Asignación de resultados de errores a variables y llamado a función que calcula los errores de redondeo absoluto y relativo
+
+## Resultados
+
+```{r}
+cat("Error de redondeo = ",error,"\n")
+cat("numero truncado = ",numeroTruncado,"\n")
+```
+
+```{r}
+cat("Error relativo < ",errores$relativo,"\n")
+cat("Error absoluto < ",errores$absoluto,"\n")
+```
