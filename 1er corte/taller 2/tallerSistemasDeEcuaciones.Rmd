@@ -1,0 +1,524 @@
+---
+title: "R Análisis Numéricos Eddy Herrera Daza"
+output:
+  pdf_document: default
+  html_notebook: default
+  html_document:
+    df_print: paged
+---
+##Ejercicios
+```{r}
+library(pracma)
+library(Matrix)
+library(Rlinsolve)
+library(reticulate)
+library(BB)
+library(matrixcalc)
+library(base)
+library("rgl")
+#require("rgl")
+```
+```{r}
+#setwd("C:/Users/auditorio/Documents/analisis_numerico/parciales/parcial1")
+```
+
+1. Para el siguiente ejercico, instale el paquete "pracma" 
+a. Revise las siguientes funciones con la matriz del ejercicio 2
+b. Evalue la matriz de transición para el método $\textbf{SOR}$
+```{r,echo=T}
+A = matrix(c(-8.1, -7, 6.123, -2, -1, 4,
+-3, -1, 0, -1, -5, 0.6,
+-1, 0.33, 6, 1/2), nrow=4, byrow=TRUE)
+
+D1<-eye(3, m = 3)
+D2<-ones(3, m = 3)
+D3<-zeros(3, m = 3)
+
+D1
+D2
+D3
+
+D<-diag(diag(A))
+L = A
+L[lower.tri(L,diag = TRUE)] <- 0
+U = A
+U[upper.tri(U,diag = TRUE)] <- 0
+S = A
+S[upper.tri(U,diag = FALSE)] <- 0
+w = 0.5
+MT = solve((eye(4) + w*solve(D)%*%L))%*%(eye(4)- w*solve(D)%*%S)
+
+MT
+
+```
+
+2. Dada la siguiente matriz, utilice las funciones del paquete para descomponer la matriz $A=L+D+U$ (Jacobi)
+```{r, echo=FALSE}
+A = matrix(c(-8.1, -7, 6.123, -2, -1, 4,
+-3, -1, 0, -1, -5, 0.6,
+-1, 0.33, 6, 1/2), nrow=4, byrow=TRUE)
+
+print(A)
+cat("\n")
+
+
+D
+cat("\n")
+L 
+cat("\n")
+U
+cat("\n")
+```
+b. Utilice la función itersolve(A, b, tol , method = "Gauss-Seidel") y solucionar el sistema asociado a la matriz $A$ con $b=[1.45,3,5.12,-4]^{t}$ con una tolerancia de $1e^-9$
+
+```{r}
+MT = solve((eye(4)+solve(D)%*%L))%*%(-solve(D)%*%U)
+cat("MATRIZ DE TRANSICION")
+print(MT)
+
+cat("\nRADIO ESPECTRAL:")
+
+R=max(abs(eig(MT)))
+
+print(R)
+
+cat("\n\n")
+
+b=c(1.45,3,5.12,-4)
+res = itersolve(A,b,tol = 1e-9,method = "Gauss-Seidel")
+res
+```
+Como el radio espetral es mayor a 1 se tiene que para el método de Gauss-Seidel el método diverge(como se puede ver en los resultados).
+
+c. Genere 5 iteraciones del método de Jacobi, calcular error relativo para cada iteracion
+```{r}
+MT = -solve(D)%*%(L+U)
+cat("MATRIZ DE TRANSICION\n")
+print(MT)
+
+cat("\nRADIO ESPECTRAL:")
+
+R=max(abs(eig(MT)))
+
+cat(R,"\n")
+
+iteraciones <- c(1:5)
+respuestas <- c()
+b<-c(1.45,3,5.12,-4)
+
+for(i in iteraciones)
+{
+    res = itersolve(A,b,tol = 1e-9,nmax=i,method = "Jacobi")
+    respuestas <- c(respuestas,Norm(res$x))
+}
+tabla <- data.frame(
+  "Iteraciones" = 1:length(respuestas),
+  "Norma" = respuestas
+)
+
+print(tabla)
+
+erroresR = c()
+for(n in iteraciones-1){
+  erroresR = c(erroresR,abs(respuestas[n]-respuestas[n+1])/abs(respuestas[n+1]))
+}
+
+tabla <- data.frame(
+  "Iteraciones" = 1:length(erroresR),
+  "Error R." = erroresR
+)
+
+print(tabla)
+
+```
+
+Como se puede ver en las primeras 5 iteraciones el m?todo se comporta de manera inestable, y por el rango espectral, se sabe que el m?todo no va a converger(no se estabiliza).
+
+3. Sea el sistema $AX=b$ 
+ a. Implemente una función en R para que evalue las raíces del polinomio característico asociado a la matriz $A$
+ b. Use el teorema de convergencia para determinar cuál método iterativo es más favorable.
+ c. Evalue la matriz de transición para cada caso y en el caso del método de relajación determine el valor óptimo de $\omega$
+ d. Teniendo en cuenta lo anterio resolver el sistema
+
+```{r, echo=T}
+A = matrix(c(4, -1, -1, -1, -1, 4,
+-1, -1, -1, -1, 4, -1,
+-1, -1, -1, 4), nrow=4, byrow=TRUE)
+A
+b = c(1, 5, 1.5,-2.33)
+```
+
+```{r}
+##A
+R=eig(A)
+
+cat("Valores propios del polinomio caracteristica:",R,"\n")
+##metodo de Gauss Seidel
+MT = solve((eye(4)+solve(D)%*%L))%*%(-solve(D)%*%U)
+cat("\nMATRIZ DE TRANSICION\n")
+print(MT)
+
+cat("\nRADIO ESPECTRAL:")
+
+R=max(abs(eig(MT)))
+print(R)
+
+res = itersolve(A,b,tol = 1e-9,method = "Gauss-Seidel")
+res
+##metodo de Jacobi
+MT = -solve(D)%*%(L+U)
+cat("\nMATRIZ DE TRANSICION\n")
+print(MT)
+
+cat("\nRADIO ESPECTRAL:")
+
+R=max(abs(eig(MT)))
+print(R)
+
+
+res = itersolve(A,b,tol = 1e-9,method = "Jacobi")
+res
+
+##metodo de relajacion
+w = 0.5
+MT = solve((eye(4) + w*solve(D)%*%L))%*%(eye(4)- w*solve(D)%*%S)
+cat("\nMATRIZ DE TRANSICION\n")
+print(MT)
+
+cat("\nRADIO ESPECTRAL:")
+
+R=max(abs(eig(MT)))
+print(R)
+
+```
+
+
+d Comparar con la solución por defecto
+```{r,echo=T}
+solucion<- solve(A,b)
+solucion
+
+lsolve.sor(A,b,w=1.2)
+
+
+```
+
+El valor optimo para lograr el menor numero de itaraciones es w=1.2.
+
+El metodo mas optimo es el de relajación con w = 1.2 (10 iteraciones). 
+
+3. 
+a. Pruebe el siguiente algoritmo con una matriz $A_{3}$, modifiquelo para quue $a_{ii}=0$ para todo $i$
+```{r, echo=T}
+tril1 <- function(M, k = 0) {
+if (k == 0) {
+M[upper.tri(M, diag = TRUE)] <- 0
+} else {
+M[col(M) >= row(M) + k + 1] <- 0
+}
+return(M)
+}
+
+matriz <- matrix(c(1:9),nrow = 3)
+
+tril1(matriz)
+```
+b. Implemente una función en R para que dada una matriz $A$ se obtenga una matriz diagonal $D$ donde en la diagonal estan los mismo elementos de A
+
+```{r}
+diagonal = function(A){
+  diag<-eye(nrow(A))*diag(A)
+  return(diag)
+}
+
+dia = diagonal(A)
+dia
+```
+
+
+4. Cree una función que cuente el número de multiplicaciones en el método directo de Gauss Jordan, para resolver un sistema de $n$ ecuaciones y pruebelo para $n=5$
+
+```{r}
+
+A = matrix(c(2,-1,4,1,-1,
+             -1,3,-2,-1,2,
+             5,1,3,-4,1,
+             3,-2,-2,-2,3,
+             -4,-1,-5,3,-4), nrow=5, byrow=TRUE)
+A
+b = c(7,1,33,24,-49)
+
+gaussJordan=  function(a,b){
+  p <- nrow(A)
+(U.pls <- cbind(A,b))
+
+U.pls[1,] <- U.pls[1,]/U.pls[1,1]
+
+can_de_mult = 0;
+i <- 2
+while (i < p+1) {
+ j <- i
+ while (j < p+1) {
+  can_de_mult = can_de_mult +1;
+  U.pls[j, ] <- U.pls[j, ] - U.pls[i-1, ] * U.pls[j, i-1]
+  j <- j+1
+ }
+ while (U.pls[i,i] == 0) {
+  U.pls <- rbind(U.pls[-i,],U.pls[i,])
+ }
+ U.pls[i,] <- U.pls[i,]/U.pls[i,i]
+ i <- i+1
+}
+for (i in p:2){
+ for (j in i:2-1) {
+     can_de_mult = can_de_mult +1;
+  U.pls[j, ] <- U.pls[j, ] - U.pls[i, ] * U.pls[j, i]
+ }
+}
+lista <- list("resultado" = U.pls,"multiplicaciones" = can_de_mult)
+return (lista)
+  
+}
+
+res = gaussJordan(A,b)
+
+print(res$resultado)
+
+cat("Numero total de multiplicaciones: ",   res$multiplicaciones);
+```
+
+
+5. Dado el siguiente sistema:
+
+    $2x-z=1$                                                                                
+    $\beta$x+2y-z=2                                                                         
+    -x+y+$\alpha$z=1
+
+a. Encuentre el valor de $\alpha$ y $\beta$ para asegura la convergencia por el método de Jacobi.
+```{r}
+A = matrix(c(2, 0, 1,
+             2,2 , -1,
+             -1, 1, 2), nrow=3, byrow=TRUE)
+B = matrix (c(1,2,1),nrow=3, byrow=TRUE)
+
+Ab = cbind(A,B)
+print(Ab)
+
+D <- diag(diag(A))
+L = A
+L[lower.tri(L,diag = TRUE)] <- 0
+U = A
+U[upper.tri(U,diag = TRUE)] <- 0
+
+MT = -solve(D)%*%(L+U)
+
+R=max(abs(eig(MT)))
+
+cat("Radio Espectral",R,"\n")
+
+cat("alpha = 2 \n")
+cat("beta = 2 \n")
+
+```
+Alpha y beta con valor igual a 2 aseguran la convergencia por el metodo de Jacobi, debido a que su radio espectral es menor a 1.
+
+b. Genere una tabla que tenga 10 iteraciones del método de Jacobi con vector inicial $x_{0}=[1,2,3]^t$
+c. Grafique cada ecuación y la solución
+    La grafica se realiza plot3d por tal razón solo se puede apreciar el resultado cuando se realiza la ejecución del codigo en R.
+    $2x-z=1$  Se encuentra representado por el plano de color Azul                                              
+    $2x+2y-z=2$ Se encuentra representado por el plano de color Rojo                                            
+    $-x+y+2z=1$ Se encuentra representado por el plano de color Azul
+    Las soluciones se encuentran representadas por los planos de color Negros
+    
+```{r}
+x0 = c(1,2,3)
+nor = c() 
+m  = c() 
+
+
+
+for(i in 1:10){
+  sol <- itersolve(A,B,x0,nmax=i,method="Jacobi")
+  cat("Iteración ", i ,"\n")
+  
+  P <- matrix (c (sol$x), nrow=3,byrow=TRUE)
+
+  print(P)
+
+  
+  b <- norm(P)
+
+  nor <- c(nor,b)
+  m <- c(m,i) 
+
+  # p1<-planes3d(2, 0, 1, 1, alpha = 10,col="blue")
+  # p3<-planes3d(2, 2, -1, 2, alpha = 10,col="red")
+  # p2<-planes3d(-1, 1, 2, 1, alpha = 10, col="yellow")
+  # p4<-planes3d(sol$x[1],sol$x[2],sol$x[3], alpha = 1 , col="black")
+  # plot3d(x, y, z, type = "s", col = "white", size = 0, add=p2+p1+p3+p4)
+  # decorate3d(axes=TRUE,box=TRUE)
+  # aspect3d(1, 1, 1)
+  
+}
+
+plot(x = m, y = nor, 
+     xlab = "Iteraciones", ylab = "Norma", type="b", 
+     main = "Norma vs Iteraciones")
+
+```
+
+6. Instalar el paquete Matrix y descomponga la matriz $A$ (del punto dos) de la forma $LU$ y la factorizarla como $A=QR$
+```{r}
+A = matrix(c(-8.1, -7, 6.123, -2, -1, 4,
+             -3, -1, 0, -1, -5, 0.6,
+             -1, 0.33, 6, 1/2), nrow=4, byrow=TRUE)
+cat("Matriz A Original: ","\n")
+print(A)
+
+cat("Matriz L y U : ","\n")
+B=lu.decomposition(A)
+print(B)
+cat("Multiplicación de matriz L y U: ","\n")
+print(B$L%*%B$U)
+#---------
+#Factorización de matriz A como QR.
+cat("\n")
+C=qr(A)
+print(C)
+C1=qr.Q(C)
+C2=qr.R(C)
+cat("Mutiplicación de matriz C1 y C2","\n")
+C1%*%C2
+```
+
+7.
+a. Determinar numéricamente la intersección entre la circunferencia $x^2 + y^2 = 1$ y la recta $y = x$. Usamos una aproximación inicial $(1,1)$. Utilice el pauqte BB y  la función BBsolve() del paquete,grafique la solución
+
+```{r}
+trigexp = function(x) {
+n = length(x)
+##Declara F como una secuencia de n valores 'vacios'
+F = rep(NA, n)
+##primera ecuacion no lineal con x[1] = x y x[2] = y
+F[1] = x[1]^2 + x[2]^2 -1
+##ultima ecuacion no lineal con x[1] = x y x[2] = y
+F[2] = x[1]-x[2]
+##retorna F con el sistema de ecuaciones no lineales
+F
+}
+n = 2
+##n = numero de ecuaciones
+p0 = c(1,1)
+sol = BBsolve(par=p0, fn=trigexp)
+##BBsolve resuelve el sistema de ecuaciones no lineales determinado en trigexp
+sol$par
+##solucion al sistema de ecuaciones no lineales
+```
+
+
+b Analizar y comentar el siguinte código
+```{r, echo=T}
+trigexp = function(x) {
+##calcula el tamanio de x
+n = length(x)
+##Declara F como una secuencia de n valores 'vacios'
+F = rep(NA, n)
+##primera ecuacion no lineal con x[1] = x y x[2] = y
+F[1] = 3*x[1]^2 + 2*x[2] - 5 + sin(x[1] - x[2]) * sin(x[1] + x[2])
+##tn1 va a ser el indice de para las ecuaciones 2 hasta n-1
+tn1 = 2:(n-1)
+#declaracion de n-2 ecuaciones lineales con sus parametros variando segun el numero de la ecuacion
+F[tn1] = -x[tn1-1] * exp(x[tn1-1] - x[tn1]) + x[tn1] *
+( 4 + 3*x[tn1]^2) + 2 * x[tn1 + 1] + sin(x[tn1] -
+x[tn1 + 1]) * sin(x[tn1] + x[tn1 + 1]) - 8
+##ultima ecuacion no lineal con x[1] = x y x[2] = y
+F[n] = -x[n-1] * exp(x[n-1] - x[n]) + 4*x[n] - 3
+##retorna F con el sistema de ecuaciones no lineales
+F
+}
+n = 10000
+##n = numero de ecuaciones
+p0 = runif(n) # n initial random starting guesses
+sol = BBsolve(par=p0, fn=trigexp)
+##BBsolve resuelve el sistema de ecuaciones no lineales determinado en trigexp
+sol$par
+##solucion al sistema de ecuaciones no lineales
+```
+8. Demuestre y realice varias pruebas que la matriz de transición por el método de Gauss-Seidel esta dada por $T=(-D^{-1}U)(I+LD^{-1})^{-1}$
+
+$$Ax=B$$
+se puede descomponer A en su su la diagonal, la matriz triangular superior y la matriz triangular inferior
+
+$$A = L+D+U$$
+Remplazando en la primera ecuación queda:
+
+$$Lx+Dx+Ux = B$$
+
+Pasando a restar Ux y Lx queda:
+
+$$Dx = B-Lx-Ux$$
+
+multiplicando por la inversa de D(a la izquierda) en toda la ecuación:
+
+$$x=D^{-1}B - D^{-1}Lx - D^{-1}Ux$$
+Y la forma iterativa para el metodo de Gauss queda de la siguiente manera
+$$x^{k+1}=D^{-1}B - D^{-1}Lx^{k+1} - D^{-1}Ux^k$$
+
+Teniendo en cuenta la definicion de convergencia:
+$$E^{k+1} = T*E^k$$
+
+Ahora se puede restar la solucion x la solucion en la interacion k+1
+
+$$x-x^{k+1} = -D^{-1}L(x-x^{k+1}) - D^{-1}U(x-x^k)$$
+
+Teniendo en cuenta la definicion de error para metodos iterativos se puede simplificar la formula:
+
+$$E^{k+1} = -D^{-1}LE^{k+1} - D^{-1}UE^{k}$$
+Pasando a sumar y factorizando el error en la iteracion k+1 la ecuacion queda:
+
+$$E^{k+1}(I+D^{-1}L) = -D^{-1}UE^{k}$$
+
+Sacando la inversa de $I+D^{-1}L$ a ambos lados de la ecuacion:
+
+$$E^{k+1} = (I+D^{-1}L)^{-1}(-D^{-1}U)E^{k}$$
+Finalmente teniendo en cuenta la ecuacion que relaciona el error y la matriz de transicion se puede deduir que el valor de la matriz de transicion es:
+
+$$T = (I+D^{-1}L)^{-1}(-D^{-1}U)$$
+
+Pruebas de la matriz de transicion para Gauss-Seidel
+```{r}
+  A = matrix(c(2,-1,4,1,-1,
+             -1,3,-2,-1,2,
+             5,1,3,-4,1,
+             3,-2,-2,-2,3,
+             -4,-1,-5,3,-4), nrow=5, byrow=TRUE)
+  A
+  b = c(7,1,33,24,-49)
+  
+  D<-diag(diag(A))
+L = A
+L[lower.tri(L,diag = TRUE)] <- 0
+U = A
+U[upper.tri(U,diag = TRUE)] <- 0
+
+  MT = solve((eye(5)+solve(D)%*%L))%*%(-solve(D)%*%U)
+  cat("\nMATRIZ DE TRANSICION\n")
+  print(MT)
+  
+  A = matrix(c(2,3,
+               5,7), nrow=2, byrow=TRUE)
+  A
+  
+  D<-diag(diag(A))
+
+  L = A
+L[lower.tri(L,diag = TRUE)] <- 0
+U = A
+U[upper.tri(U,diag = TRUE)] <- 0
+
+MT = solve((eye(2)+solve(D)%*%L))%*%(-solve(D)%*%U)
+
+  cat("\nMATRIZ DE TRANSICIÓN\n")
+  print(MT)
+```
+
