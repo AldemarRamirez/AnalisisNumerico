@@ -1,0 +1,258 @@
+---
+title: "TALLLER DERIVADAS"
+author: "Juan Anagrita, HectorHernandez, Aldemar Ramirez"
+date: "October 27,2019"
+output:
+  pdf_document: default
+  word_document: default
+  html_document:
+    df_print: paged
+---
+
+## Problema a y b
+
+a) Teniendo en cuenta lo anterior, genere una tabla para evaluar el valor aproximado𝑓′(𝑥) = 𝑥𝑐𝑜𝑥de 𝒇´(𝟏. 𝟖) ≈ para los siguientes valores de ℎ =0.1,0.01,0.0011,0.0001.
+
+b) Estime el valor aproximado de las cotas del error para el problema anterior
+
+## Solución 
+```{r}
+f = function(x){
+  return (x*cos(x))
+}
+
+print(f(pi))
+
+aproximacionDerivada = function(x0,h){
+  result = (f(x0+h)-f(x0))/h
+}
+
+hs = c(0.1,0.01,0.001,0.0001,0.00001)
+
+f1=expression(x*cos(x))
+
+fp = D(f1,'x')
+
+g = function(x){eval(fp)}
+print(g(1.8))
+
+resultados = c()
+error = c()
+real = c()
+for(i in hs){
+resultados = c(resultados,aproximacionDerivada(1.8,i))
+  real = c(real,g(1.8))
+}
+
+error = resultados - real
+
+tablaResultados <- data.frame(
+  "h" = hs,
+  "Derivada aprox" = resultados,
+  "valor real" = real,
+  "error" = error
+)
+
+print(tablaResultados)
+
+```
+
+## Problema C
+
+c. Cuál es el valor de ℎ que proporciona una aproximación con una precisión de 10−4
+
+## Solucion C
+
+Como se ve en la tabla con h = 0.001 el valor hay una presicion de 7.689598e-04	
+
+## Problema D
+
+d) Supóngase que se tienen tres puntos dados por 𝑥0; 𝑥1 = 𝑥0 + ℎ; 𝑥2 = 𝑥0 + 2ℎ
+Encuentre la formula conocida de tres puntos para determinar una aproximaciónde 𝑓′(𝑥0) Donde, 𝜉0se encuentra entre 𝑥0 y 𝑥0 + 2ℎ. Utilice está fórmula paraencontrar ≈ 𝑓´(1.8)
+
+## Solucion D
+
+la formula a usar va a ser la siguiente:
+$$f´(x_0)= 1/(2h)*[-3f(x_0)+4f(x_0+h)-f(x_0+2h)] + h^2/3 * f^{(3)}(E_0)$$
+
+```{r}
+aproximacionDerivada2 = function(x0,h){
+  result =  1/(2*h)*(-3*f(x0)+4*f(x0+h)-f(x0+2*h))
+}
+
+res1 = aproximacionDerivada2(1.8,0.00001)
+
+cat("f'(1.8) = ",res1, "\n")
+
+cat("Error Absoluto = ",abs(res1-real[1]), "\n")
+
+cat("Error relativo = ",abs(res1-real[1])/real[1] *100, "\n")
+
+
+```
+
+## Problema E
+
+e) Realice una modificación de la fórmula de los tres puntos, tomando valores entre
+(𝑥0 − ℎ) y (𝑥0 + ℎ) y compare la magnitud del error con la fórmula de la parte e
+
+## Solucion E
+
+La formula que se va a usar es la siguiente:
+$$f´(x_0)= 1/(2h)*[-f(x_0-h)+f(x_0+h)]-h^2/6* f^{(3)}(E_0)$$
+
+```{r}
+aproximacionDerivada3 = function(x0,h){
+  result = 1/(2*h)*(-f(x0-h)+f(x0+h))
+}
+
+res2 = aproximacionDerivada3(1.8,0.00001)
+
+cat("f'(1.8) = ",res2, "\n")
+
+cat("Error Absoluto = ",abs(res2-real[1]), "\n")
+
+cat("Error relativo = ",abs(res2-real[1])/real[1] *100, "\n")
+
+
+cat("Diferencia error punto e vs d = ",abs((res1-real[1]) - (res2-real[1])), "\n")
+
+```
+
+## Problema F
+
+f. Utilice la fórmula para cinco puntos alrededor de 𝑥0 y aplíquela y compárela con
+todas las formulas anteriores
+
+## Solucion F
+
+La formula que se va a usar es la siguiente:
+$f´(x_0)= [f(x_0-2h)-8f(x_0-h)+8f(x_0+h)-f(x_0+2h)]/(12h) + h^4/30* f^{(5)}(E_0)$
+
+```{r}
+aproximacionDerivada4 = function(x0,h){
+  result = (f(x0-2*h)-8*f(x0-h)+8*f(x0+h)-f(x0+2*h))/(12*h)
+}
+
+res3 = aproximacionDerivada4(1.8,0.00001)
+
+cat("f'(1.8) = ",res3, "\n")
+
+cat("Error Absoluto = ",res3-real[1], "\n")
+
+cat("Error relativo = ",abs(res3-real[1])/real[1] *100, "\n")
+
+cat("Diferencia Error punto f v.s d = ",abs((res1-real[1]) - (res3-real[1])), "\n")
+
+cat("Diferencia Error punto f v.s e = ",abs((res2-real[1]) - (res3-real[1])), "\n")
+
+print(abs(res2-real[1])>abs(res3-real[1]))
+```
+
+## Problema G
+
+g. Aplique la fórmula adecuada para aproximar 𝑓 (1.8) justifique su respuesta
+
+## Solucion G
+
+La formula mas adecuada para aproximar la derivada es la de los 5 puntos siendo las que tiene una mayor presicion.
+
+```{r}
+aproximacionDerivada4 = function(x0,h){
+  result = (f(x0-2*h)-8*f(x0-h)+8*f(x0+h)-f(x0+2*h))/(12*h)
+}
+
+res3 = aproximacionDerivada4(1.8,0.00001)
+
+cat("f'(1.8) = ",res3, "\n")
+
+cat("Error Absoluto = ",res3-real[1], "\n")
+
+cat("Error relativo = ",abs(res3-real[1])/real[1] *100, "\n")
+```
+
+## Problema H
+
+h) Teniendo en cuenta que el error total (ℎ)= error de redondeo + error de
+truncamiento dado por: $e(h) = E/h+h^2/6M$ una función del tamaño del paso.
+Encuentre el tamaño óptimo del paso
+
+## Solucion H
+
+```{r}
+  f2=expression(E/h + (h^2)/6 * M)
+
+  f2p = D(f2,'h')
+
+  g2 = function(x){eval(f2p)}
+```
+
+como se puede ver la funcion del error total al derivarse para hallar el valor oprimo queda dada por 
+$$e'(h)=(h/3)*M-E/(h^2)$$
+
+para hallar el valor optimo de h se iguala la derivada a 0
+
+$$0=(h/3)*M-E/(h^2)$$
+
+y se despeja h
+
+$$h=(3*E/M)^{(1/3)}$$
+
+## Problema I
+
+i) El siguiente código está dado para la aproximar 𝑓′(1);
+f(x) = xe^x, realice una gráfica que muestre como varia la precisión en función de ℎ
+
+## Solucion I
+
+```{r}
+library(pracma)
+f=function(x) x*exp(x)
+r=5.436563656918091
+h=0.1
+
+errores = c()
+valH = c()
+
+for (i in 1:15){
+ d=(f(1+h)-f(1))/h
+ e=abs(r-d)
+ errores = c(errores,e)
+ valH = c(valH,h)
+cat(formatC(c(h, r, d, e), width = -20, format = "f", flag = " ",digits
+= 15),"\n") 
+ h=h/10
+}
+
+plot(valH,errores, type = "b")
+```
+
+## Problema H
+
+j) Aplicación: En un circuito con un voltaje E(t) y una inductancia L se tiene que: E(T) = L*di/dt + Ri donde R es la resistencia e i es la corriente. La siguiente tabla muestra la medida de la corriente para varios instantes de tiempo(segundos), con R =0.142ohms y L=0.98 henries
+
+t = 1.00,1.01,1.02,1.03,1.04
+i = 3.10,3.12,3.14,3.18,3.24
+
+## Solucion H
+
+sea h = 0.01
+
+```{r}
+h = 0.01
+R = 0.142
+L = 0.098
+i = c(3.1,3.12,3.14,3.18,3.24)
+
+E = function(L,R,h,i){
+  d = (-i[1]+8*i[2]-8*i[4]+i[5])/(12*h)
+  r = L*d+R*i[3]
+  return(r)
+}
+
+result = E(L,R,h,i)
+
+cat("Para t = 1.02 el voltaje vale ",result, "\n")
+
+```
+
